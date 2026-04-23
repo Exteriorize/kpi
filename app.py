@@ -10,7 +10,6 @@ import streamlit as st
 
 st.set_page_config(page_title="KPI Dashboard", page_icon="📊", layout="wide")
 
-DATA_PATH = Path(__file__).parent / "data" / "real_kpi_history.csv"
 BRAND_LABELS = {"RSTR": "Restore", "RSMX": "Restore Mix", "SMSG": "Samsung"}
 
 st.markdown(
@@ -139,17 +138,9 @@ def parse_archive(uploaded_file) -> pd.DataFrame:
     return df.sort_values(["date", "brand", "city", "store"]).reset_index(drop=True)
 
 
-def load_default_data() -> pd.DataFrame:
-    if not DATA_PATH.exists():
-        raise FileNotFoundError("Нет встроенного CSV. Загрузи ZIP-архив с файлами по датам.")
-    df = pd.read_csv(DATA_PATH)
-    df["date"] = pd.to_datetime(df["date"], errors="coerce")
-    return df
-
-
 def load_data(uploaded_file) -> pd.DataFrame:
     if uploaded_file is None:
-        return load_default_data()
+        raise FileNotFoundError("Загрузи ZIP-архив с KPI-файлами по датам в боковой панели.")
     if uploaded_file.name.lower().endswith(".zip"):
         return parse_archive(uploaded_file)
     if uploaded_file.name.lower().endswith(".csv"):
@@ -192,7 +183,7 @@ with st.sidebar:
 try:
     df = load_data(uploaded_file)
 except Exception as e:
-    st.error(f"Ошибка чтения данных: {e}")
+    st.info(str(e))
     st.stop()
 
 num_cols = [
